@@ -1,0 +1,2071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>The Deal Ledger — Creative Finance Calculator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap');
+
+:root{
+  --bg:#17181a;
+  --panel:#202224;
+  --panel-2:#27292c;
+  --line:#3a3c3f;
+  --ink:#ece7df;
+  --ink-dim:#9a9690;
+  --accent:#c98a3e;
+  --accent-soft:#3a2f22;
+  --good:#5fae6c;
+  --good-soft:#1f2b20;
+  --warn:#d9a53e;
+  --warn-soft:#2e2719;
+  --bad:#cf6353;
+  --bad-soft:#2e1d1a;
+  --radius:10px;
+  --serif:'Fraunces', serif;
+  --sans:'Inter', sans-serif;
+  --mono:'IBM Plex Mono', monospace;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;
+  padding:14px;
+}
+.app{max-width:640px;margin:0 auto;}
+
+/* ---------- Header ---------- */
+.app-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  padding:4px 4px 16px;
+  border-bottom:1px solid var(--line);
+  margin-bottom:16px;
+  gap:10px;
+}
+.app-header h1{
+  font-family:var(--serif);
+  font-weight:600;
+  font-size:23px;
+  margin:0;
+  letter-spacing:0.2px;
+}
+.app-header h1 span{color:var(--accent);}
+.app-header .header-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+.app-header .tag{
+  font-size:11px;
+  color:var(--ink-dim);
+  font-family:var(--mono);
+  text-transform:uppercase;
+  letter-spacing:0.08em;
+}
+.reset-btn{
+  font-family:var(--mono);
+  font-size:11px;
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  color:var(--ink-dim);
+  padding:5px 10px;
+  border-radius:999px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.reset-btn:hover{border-color:var(--bad);color:var(--bad);}
+
+/* ---------- Ledger card ---------- */
+.ledger{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  margin-bottom:14px;
+  position:relative;
+}
+.ledger-title{
+  font-family:var(--mono);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:0.1em;
+  color:var(--accent);
+  margin:0 0 12px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.ledger-title::after{
+  content:"";
+  flex:1;
+  height:1px;
+  background:var(--line);
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px 12px;
+}
+.field{display:flex;flex-direction:column;gap:4px;}
+.field.full{grid-column:1 / -1;}
+.field label{
+  font-size:11.5px;
+  color:var(--ink-dim);
+  font-weight:500;
+}
+.field label .opt{color:var(--ink-dim);font-style:italic;font-weight:400;}
+.input-wrap{position:relative;display:flex;align-items:center;}
+.input-wrap .prefix,
+.input-wrap .suffix{
+  position:absolute;
+  font-family:var(--mono);
+  font-size:14px;
+  color:var(--ink-dim);
+  pointer-events:none;
+}
+.input-wrap .prefix{left:10px;}
+.input-wrap .suffix{right:10px;}
+input[type=number],
+input[type=date],
+input[type=text]{
+  width:100%;
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  border-radius:8px;
+  color:var(--ink);
+  font-family:var(--mono);
+  font-size:15px;
+  padding:9px 10px;
+  outline:none;
+}
+.input-wrap.has-prefix input{padding-left:22px;}
+.input-wrap.has-suffix input{padding-right:28px;}
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+input[type=number]{-moz-appearance:textfield;}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft);}
+input[type=date]{font-family:var(--sans);font-size:13.5px;color-scheme:dark;}
+input[readonly]{background:var(--bg);color:var(--accent);cursor:default;}
+select{
+  width:100%;
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  border-radius:8px;
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:13.5px;
+  padding:9px 10px;
+  outline:none;
+  cursor:pointer;
+  appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239a9690' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat:no-repeat;
+  background-position:right 10px center;
+  background-size:16px;
+  padding-right:32px;
+}
+select:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft);}
+select option{background:var(--panel-2);color:var(--ink);}
+
+.checkrow{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:12.5px;
+  color:var(--ink-dim);
+  grid-column:1/-1;
+  padding-top:2px;
+}
+.checkrow input{width:16px;height:16px;accent-color:var(--accent);}
+.checkrow label{color:var(--ink);font-size:12.5px;}
+
+.comp-row{display:flex;gap:8px;align-items:flex-end;margin-bottom:10px;}
+.comp-row .field{flex:1;}
+.comp-remove{
+  flex:0 0 auto;
+  width:36px;height:39px;
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  border-radius:8px;
+  color:var(--ink-dim);
+  font-size:16px;
+  line-height:1;
+  cursor:pointer;
+}
+.comp-remove:disabled{opacity:0.2;cursor:default;}
+.comp-remove:not(:disabled):hover{color:var(--bad);border-color:var(--bad);}
+.add-comp-btn{
+  width:100%;
+  text-align:center;
+  margin-top:2px;
+  padding:9px;
+  background:var(--panel-2);
+  border:1px dashed var(--line);
+  border-radius:8px;
+  color:var(--accent);
+  font-family:var(--sans);
+  font-weight:600;
+  font-size:12.5px;
+  cursor:pointer;
+}
+.add-comp-btn:hover{border-color:var(--accent);}
+
+/* ---------- DSCR target row ---------- */
+.target-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:12px;
+  flex-wrap:wrap;
+}
+.target-row .lab{font-size:11.5px;color:var(--ink-dim);margin-right:2px;}
+.pillbtn{
+  font-family:var(--mono);
+  font-size:13px;
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  color:var(--ink);
+  padding:6px 12px;
+  border-radius:999px;
+  cursor:pointer;
+}
+.pillbtn.active{background:var(--accent);border-color:var(--accent);color:#1a1410;font-weight:600;}
+.target-row input[type=number]{width:64px;padding:6px 8px;font-size:13px;}
+
+/* ---------- NOI strip ---------- */
+.noi-strip{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-top:14px;
+  padding-top:12px;
+  border-top:1px dashed var(--line);
+}
+.noi-strip .item{text-align:center;}
+.noi-strip .item .v{font-family:var(--mono);font-size:15px;font-weight:600;}
+.noi-strip .item .l{font-size:10px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;}
+
+/* ---------- Tabs ---------- */
+.tabs{display:flex;gap:4px;margin-bottom:14px;}
+.tabbtn{
+  flex:1;
+  font-family:var(--sans);
+  font-weight:600;
+  font-size:11.5px;
+  text-align:center;
+  background:var(--panel);
+  color:var(--ink-dim);
+  border:1px solid var(--line);
+  border-bottom:none;
+  padding:10px 2px 9px;
+  border-radius:8px 8px 0 0;
+  cursor:pointer;
+  position:relative;
+  top:1px;
+}
+.tabbtn.active{
+  background:var(--panel-2);
+  color:var(--accent);
+  border-color:var(--accent);
+}
+.tab-panel{display:none;}
+.tab-panel.show{display:block;}
+
+/* ---------- Responsive two-column layout (tablet/desktop) ---------- */
+.panel-grid{display:block;}
+.col-inputs, .col-results{display:flex;flex-direction:column;}
+.col-results{
+  border-top:3px solid var(--line);
+  border-radius:0 0 0 0;
+  padding-top:12px;
+  margin-top:2px;
+}
+.col-results.health-good{border-color:var(--good);}
+.col-results.health-warn{border-color:var(--warn);}
+.col-results.health-bad{border-color:var(--bad);}
+.col-results > *:first-child{margin-top:0;}
+
+@media (min-width:900px){
+  body{padding:24px;}
+  .app{max-width:1180px;}
+  .panel-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:22px;
+    align-items:start;
+  }
+  .col-results{
+    position:sticky;
+    top:18px;
+    border-top:none;
+    border-left:3px solid var(--line);
+    padding-top:0;
+    padding-left:18px;
+  }
+  .col-results.health-good{border-color:var(--good);}
+  .col-results.health-warn{border-color:var(--warn);}
+  .col-results.health-bad{border-color:var(--bad);}
+}
+
+/* ---------- Result slip ---------- */
+.slip{
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:18px 16px 14px;
+  margin-top:4px;
+  margin-bottom:14px;
+  position:relative;
+  overflow:hidden;
+}
+.slip::before{
+  content:"";
+  position:absolute;
+  top:0;left:0;right:0;height:4px;
+  background:repeating-linear-gradient(90deg, var(--bg) 0 6px, transparent 6px 12px);
+}
+.slip .hero{
+  text-align:center;
+  padding:6px 0 14px;
+  border-bottom:1px dashed var(--line);
+  margin-bottom:12px;
+}
+.slip .hero .hv{
+  font-family:var(--mono);
+  font-size:34px;
+  font-weight:700;
+  color:var(--accent);
+  line-height:1.1;
+  word-break:break-word;
+}
+.slip .hero .hv.good{color:var(--good);}
+.slip .hero .hv.bad{color:var(--bad);}
+.slip .hero .hl{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:0.08em;
+  color:var(--ink-dim);
+  margin-top:4px;
+}
+.lineitems{display:flex;flex-direction:column;gap:7px;}
+.lineitem{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  font-size:13px;
+}
+.lineitem .k{color:var(--ink-dim);}
+.lineitem .v{font-family:var(--mono);font-weight:600;}
+.lineitem.total{
+  border-top:1px solid var(--line);
+  margin-top:4px;
+  padding-top:8px;
+  font-size:14.5px;
+}
+.lineitem.total .v{color:var(--accent);font-size:16px;}
+.lineitem .v.bad{color:var(--bad);}
+.lineitem .v.good{color:var(--good);}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-family:var(--mono);
+  font-size:13px;
+  font-weight:700;
+  padding:5px 11px;
+  border-radius:999px;
+}
+.badge.good{background:var(--good-soft);color:var(--good);}
+.badge.warn{background:var(--warn-soft);color:var(--warn);}
+.badge.bad{background:var(--bad-soft);color:var(--bad);}
+.badge .dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+
+.note{
+  font-size:11.5px;
+  color:var(--ink-dim);
+  margin-top:12px;
+  line-height:1.45;
+  padding-top:10px;
+  border-top:1px dashed var(--line);
+}
+.note strong{color:var(--ink);}
+.note.warning{color:var(--bad);border-top-color:var(--bad-soft);}
+.note.warning strong{color:var(--bad);}
+
+.subhead{
+  font-family:var(--mono);
+  font-size:10.5px;
+  text-transform:uppercase;
+  letter-spacing:0.08em;
+  color:var(--ink-dim);
+  margin:16px 0 8px;
+}
+
+.balloon-callout{
+  background:var(--warn-soft);
+  border:1px solid var(--warn);
+  border-radius:var(--radius);
+  padding:14px 16px 13px;
+  margin-bottom:14px;
+  text-align:center;
+}
+.balloon-callout .bc-eyebrow{
+  font-family:var(--mono);
+  font-size:10.5px;
+  text-transform:uppercase;
+  letter-spacing:0.1em;
+  color:var(--warn);
+  margin-bottom:6px;
+}
+.balloon-callout .bc-amount{
+  font-family:var(--mono);
+  font-size:30px;
+  font-weight:700;
+  color:var(--warn);
+  line-height:1.1;
+}
+.balloon-callout .bc-sub{
+  font-size:12px;
+  color:var(--ink-dim);
+  margin-top:5px;
+}
+.balloon-callout .bc-sub strong{color:var(--ink);}
+
+.rate-callout{
+  border-radius:var(--radius);
+  padding:14px 16px 13px;
+  margin-bottom:14px;
+  text-align:center;
+  border:1px solid var(--line);
+  background:var(--panel-2);
+}
+.rate-callout.good{background:var(--good-soft);border-color:var(--good);}
+.rate-callout.bad{background:var(--bad-soft);border-color:var(--bad);}
+.rate-callout.warn{background:var(--warn-soft);border-color:var(--warn);}
+.rate-callout .rc-eyebrow{
+  font-family:var(--mono);
+  font-size:10.5px;
+  text-transform:uppercase;
+  letter-spacing:0.1em;
+  color:var(--ink-dim);
+  margin-bottom:6px;
+}
+.rate-callout.good .rc-eyebrow, .rate-callout.good .rc-amount{color:var(--good);}
+.rate-callout.bad .rc-eyebrow, .rate-callout.bad .rc-amount{color:var(--bad);}
+.rate-callout.warn .rc-eyebrow, .rate-callout.warn .rc-amount{color:var(--warn);}
+.rate-callout .rc-amount{
+  font-family:var(--mono);
+  font-size:28px;
+  font-weight:700;
+  line-height:1.1;
+  color:var(--ink);
+}
+.rate-callout .rc-sub{
+  font-size:12px;
+  color:var(--ink-dim);
+  margin-top:5px;
+  line-height:1.4;
+}
+.rate-callout .rc-sub strong{color:var(--ink);}
+
+/* ---------- Amortization schedule ---------- */
+.amort-toggle{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:none;
+  border:none;
+  padding:0;
+  margin:0 0 12px;
+  cursor:pointer;
+  color:var(--accent);
+  font-family:var(--mono);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:0.1em;
+  text-align:left;
+}
+.amort-toggle .at-line{flex:1;height:1px;background:var(--line);}
+.amort-toggle .amort-chevron{color:var(--ink-dim);transition:transform 0.15s;font-size:12px;}
+.amort-toggle.open .amort-chevron{transform:rotate(180deg);}
+.amort-scroll{max-height:320px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;}
+.amort-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11.5px;}
+.amort-table thead th{
+  position:sticky;top:0;
+  background:var(--panel-2);
+  color:var(--ink-dim);
+  text-align:right;
+  padding:7px 8px;
+  font-size:9.5px;
+  text-transform:uppercase;
+  letter-spacing:0.05em;
+  border-bottom:1px solid var(--line);
+}
+.amort-table thead th:first-child{text-align:left;}
+.amort-table td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--line);color:var(--ink);}
+.amort-table td:first-child{text-align:left;color:var(--ink-dim);}
+.amort-table tr:last-child td{border-bottom:none;}
+.amort-table tr.balloon-row{background:var(--warn-soft);}
+.amort-table tr.balloon-row td{color:var(--warn);font-weight:700;}
+.amort-table tr.balloon-row td:first-child{color:var(--warn);}
+
+.copy-btn{
+  width:100%;
+  text-align:center;
+  margin-top:4px;
+  padding:11px;
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  border-radius:8px;
+  color:var(--ink);
+  font-family:var(--sans);
+  font-weight:600;
+  font-size:12.5px;
+  cursor:pointer;
+}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+footer{
+  text-align:center;
+  font-size:10.5px;
+  color:var(--ink-dim);
+  padding:18px 8px 4px;
+  line-height:1.5;
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <div class="app-header">
+    <h1>The Deal <span>Ledger</span></h1>
+    <div class="header-right">
+      <div class="tag">creative finance calc</div>
+      <button class="reset-btn" id="reset-all-btn" type="button" title="Reset every field on every tab back to defaults">↺ Reset all</button>
+    </div>
+  </div>
+
+  <!-- ============ SHARED: PROPERTY & INCOME ============ -->
+  <div class="ledger">
+    <p class="ledger-title">Property &amp; Income</p>
+    <div class="grid">
+      <div class="field full">
+        <label>Total monthly rent (all units)</label>
+        <div class="input-wrap has-prefix"><span class="prefix">$</span>
+          <input type="number" id="rent" value="2400" min="0" step="50" inputmode="decimal">
+        </div>
+      </div>
+      <div class="field">
+        <label>Vacancy %</label>
+        <div class="input-wrap has-suffix">
+          <input type="number" id="vacancy" value="5" min="0" step="0.5" inputmode="decimal">
+          <span class="suffix">%</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Maint. &amp; mgmt %</label>
+        <div class="input-wrap has-suffix">
+          <input type="number" id="maintmgmt" value="15" min="0" step="0.5" inputmode="decimal">
+          <span class="suffix">%</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Property taxes</label>
+        <div class="input-wrap has-prefix"><span class="prefix">$</span>
+          <input type="number" id="taxes" value="250" min="0" step="10" inputmode="decimal">
+        </div>
+      </div>
+      <div class="field">
+        <label>Insurance</label>
+        <div class="input-wrap has-prefix"><span class="prefix">$</span>
+          <input type="number" id="insurance" value="120" min="0" step="10" inputmode="decimal">
+        </div>
+      </div>
+      <div class="field">
+        <label>HOA <span class="opt">(if any)</span></label>
+        <div class="input-wrap has-prefix"><span class="prefix">$</span>
+          <input type="number" id="hoa" value="0" min="0" step="5" inputmode="decimal">
+        </div>
+      </div>
+      <div class="field">
+        <label>Other fees <span class="opt">(monthly)</span></label>
+        <div class="input-wrap has-prefix"><span class="prefix">$</span>
+          <input type="number" id="otherfees" value="0" min="0" step="5" inputmode="decimal">
+        </div>
+      </div>
+    </div>
+
+    <div class="target-row">
+      <span class="lab">Target DSCR</span>
+      <button class="pillbtn active" data-dscr="1.25" type="button">1.25</button>
+      <button class="pillbtn" data-dscr="1.00" type="button">1.00</button>
+      <input type="number" id="targetdscr" value="1.25" step="0.01" min="0" inputmode="decimal">
+    </div>
+
+    <div class="noi-strip">
+      <div class="item"><div class="v" id="out-egi">$0</div><div class="l">EGI / mo</div></div>
+      <div class="item"><div class="v" id="out-opex">$0</div><div class="l">OpEx / mo</div></div>
+      <div class="item"><div class="v" id="out-noi">$0</div><div class="l">NOI / mo</div></div>
+    </div>
+  </div>
+
+  <!-- ============ TABS ============ -->
+  <div class="tabs">
+    <button class="tabbtn active" data-tab="maxoffer" type="button">Max Offer</button>
+    <button class="tabbtn" data-tab="sellerfi" type="button">Seller Fi</button>
+    <button class="tabbtn" data-tab="subto" type="button">Sub-To</button>
+    <button class="tabbtn" data-tab="flip" type="button">Flip</button>
+  </div>
+
+  <!-- ============ TAB 1: MAX OFFER (DSCR SOLVER) ============ -->
+  <div class="tab-panel show" id="panel-maxoffer">
+    <div class="panel-grid">
+      <div class="col-inputs">
+        <div class="ledger">
+          <p class="ledger-title">Loan Terms To Test</p>
+          <div class="grid">
+            <div class="field">
+              <label>Interest rate</label>
+              <div class="input-wrap has-suffix">
+                <input type="number" id="mo-rate" value="8" min="0" step="0.125" inputmode="decimal">
+                <span class="suffix">%</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>Term</label>
+              <div class="input-wrap has-suffix">
+                <input type="number" id="mo-term" value="30" min="1" step="1" inputmode="decimal">
+                <span class="suffix">yrs</span>
+              </div>
+            </div>
+            <div class="field full">
+              <label>Down payment % <span class="opt">(0% for sub-to style — loan = price)</span></label>
+              <div class="input-wrap has-suffix">
+                <input type="number" id="mo-down" value="10" min="0" max="99" step="1" inputmode="decimal">
+                <span class="suffix">%</span>
+              </div>
+            </div>
+            <div class="field full">
+              <label>Your assignment fee <span class="opt">(wholesaling — deducted from the end buyer's max price)</span></label>
+              <div class="input-wrap has-prefix"><span class="prefix">$</span>
+                <input type="number" id="mo-assignfee" value="0" min="0" step="500" inputmode="decimal">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-results" id="mo-results-col">
+        <div class="slip">
+          <div class="hero">
+            <div class="hv" id="mo-maxprice">$0</div>
+            <div class="hl" id="mo-hero-label">Max offer at target DSCR</div>
+          </div>
+          <div class="lineitems">
+            <div class="lineitem" id="mo-endbuyer-row" style="display:none;"><span class="k">Max price end buyer's DSCR supports</span><span class="v" id="mo-endbuyerprice">$0</span></div>
+            <div class="lineitem" id="mo-fee-row" style="display:none;"><span class="k">Less: your assignment fee</span><span class="v" id="mo-feeamt">$0</span></div>
+            <div class="lineitem"><span class="k">Max loan amount</span><span class="v" id="mo-maxloan">$0</span></div>
+            <div class="lineitem"><span class="k">Required down payment</span><span class="v" id="mo-downamt">$0</span></div>
+            <div class="lineitem"><span class="k">Monthly P&amp;I at that loan</span><span class="v" id="mo-pi">$0</span></div>
+            <div class="lineitem total"><span class="k">NOI used</span><span class="v" id="mo-noi">$0/mo</span></div>
+          </div>
+          <p class="note warning" id="mo-fee-warning" style="display:none;">Your assignment fee exceeds what the end buyer's DSCR will support at this price — this doesn't work as an assignment at this fee. Lower the fee or find more spread elsewhere.</p>
+          <div class="note">
+            Quick compare — max offer to seller at each threshold, same rate/term/down%<span id="mo-cmp-fee-note"></span>:<br>
+            <strong>DSCR 1.25:</strong> <span id="cmp-125">$0</span> &nbsp;|&nbsp;
+            <strong>DSCR 1.00:</strong> <span id="cmp-100">$0</span> (will likely need seller financing)
+          </div>
+        </div>
+
+        <div class="ledger">
+          <button class="amort-toggle" id="mo-amort-toggle" type="button">
+            <span>Amortization — at the max loan above</span><span class="at-line"></span><span class="amort-chevron">▾</span>
+          </button>
+          <div class="amort-scroll" id="mo-amort-wrap" style="display:none;">
+            <table class="amort-table">
+              <thead><tr><th>Yr</th><th>Payment</th><th>Principal</th><th>Interest</th><th>Balance</th></tr></thead>
+              <tbody id="mo-amort-rows"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <button class="copy-btn" id="copy-maxoffer-btn" type="button">📋 Copy summary</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 2: SELLER FINANCE ============ -->
+  <div class="tab-panel" id="panel-sellerfi">
+    <div class="panel-grid">
+      <div class="col-inputs">
+        <div class="ledger">
+          <p class="ledger-title">Seller Finance Terms</p>
+          <div class="grid">
+            <div class="field full">
+              <label>Asking / offer price</label>
+              <div class="input-wrap has-prefix"><span class="prefix">$</span>
+                <input type="number" id="sf-price" value="250000" min="0" step="1000" inputmode="decimal">
+              </div>
+            </div>
+            <div class="field">
+              <label>Down payment %</label>
+              <div class="input-wrap has-suffix">
+                <input type="number" id="sf-downpct" value="10" min="0" max="100" step="1" inputmode="decimal">
+                <span class="suffix">%</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>Down payment $</label>
+              <div class="input-wrap has-prefix"><span class="prefix">$</span>
+                <input type="number" id="sf-downamt" value="25000" min="0" step="500" inputmode="decimal">
+              </div>
+            </div>
+            <div class="field full">
+              <label>Closing costs / rehab cash <span class="opt">(optional, added to cash invested)</span></label>
+              <div class="input-wrap has-prefix"><span class="prefix">$</span>
+                <input type="number" id="sf-extracash" value="0" min="0" step="250" inputmode="decimal">
+              </div>
+            </div>
+            <div class="field">
+              <label>Interest rate</label>
+              <div class="input-wrap has-suffix">
+                <input type="number" id="sf-rate" value="8" min="0" step="0.125" inputmode="decimal">
+                <span class="suffix">%</span>
+              </div>
+            </div>
+            <div class="field">
+              <label id="sf-term-label">Term <span class="opt">(amortized over)</span></label>
+              <div class="input-wrap has-suffix">
+                <input type="number" id="sf-term" value="30" min="1" step="1" inputmode="decimal">
+                <span class="suffix">yrs</span>
+              </div>
+            </div>
+            <div class="field full">
+              <label>Payment structure</label>
+              <select id="sf-paytype">
+                <option value="amortizing">Fully amortizing — P&amp;I every month</option>
+                <option value="iononly">Interest-only — lump principal due at term</option>
+                <option value="custom">Custom P&amp;I — I'll enter the amount</option>
+              </select>
+            </div>
+            <div class="field full" id="sf-custom-pi-field" style="display:none;">
+              <label>Your P&amp;I offer <span class="opt">(calculated would be: <span id="sf-pi-calc-ref">$0</span>/mo)</span></label>
+              <div class="input-wrap has-prefix"><span class="prefix">$</span>
+                <input type="number" id="sf-pi-override-amt" value="0" min="0" step="10" inputmode="decimal">
+              </div>
+            </div>
+            <div class="checkrow">
+              <input type="checkbox" id="sf-balloon-on">
+              <label for="sf-balloon-on">Balloon payment due before term ends <span class="opt" id="sf-balloon-io-note"></span></label>
+            </div>
+            <div class="field" id="sf-balloon-field" style="display:none;">
+              <label>Balloon due in</label>
+              <div class="input-wrap has-suffix">
+                <input type="number" id="sf-balloon-years" value="5" min="1" step="1" inputmode="decimal">
+                <span class="suffix">yrs</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>First payment date</label>
+              <input type="date" id="sf-fpd">
+            </div>
+          </div>
+        </div>
+
+        <div class="ledger">
+          <p class="ledger-title">Recommended Offer</p>
+          <div class="grid">
+            <div class="field">
+              <label>Target cash-on-cash</label>
+              <div class="input-wrap has-suffix">
+                <input type="number" id="sf-targetcoc" value="16" min="0" step="0.5" inputmode="decimal">
+                <span class="suffix">%</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>Max premium over asking</label>
+              <div class="input-wrap has-suffix">
+                <input type="number" id="sf-maxpremium" value="10" min="0" step="1" inputmode="decimal">
+                <span class="suffix">%</span>
+              </div>
+            </div>
+            <div class="field full">
+              <label>Agent commission</label>
+              <select id="sf-commission-mode">
+                <option value="none">None</option>
+                <option value="pct">% of asking price</option>
+                <option value="flat">Flat $ amount</option>
+              </select>
+            </div>
+            <div class="field full" id="sf-commission-pct-field" style="display:none;">
+              <label>Commission %</label>
+              <div class="input-wrap has-suffix">
+                <input type="number" id="sf-commission-pct" value="3" min="0" step="0.5" inputmode="decimal">
+                <span class="suffix">%</span>
+              </div>
+            </div>
+            <div class="field full" id="sf-commission-flat-field" style="display:none;">
+              <label>Commission flat amount</label>
+              <div class="input-wrap has-prefix"><span class="prefix">$</span>
+                <input type="number" id="sf-commission-flat" value="0" min="0" step="100" inputmode="decimal">
+              </div>
+            </div>
+            <div class="field full">
+              <label>Your assignment fee <span class="opt">(if assigning this deal to an end buyer)</span></label>
+              <div class="input-wrap has-prefix"><span class="prefix">$</span>
+                <input type="number" id="sf-assignmentfee" value="0" min="0" step="500" inputmode="decimal">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-results" id="sf-results-col">
+        <div class="slip">
+          <div class="hero">
+            <div class="hv" id="sf-totalpmt">$0</div>
+            <div class="hl">Total monthly payment</div>
+          </div>
+          <div class="lineitems">
+            <div class="lineitem"><span class="k">Loan amount</span><span class="v" id="sf-loanamt">$0</span></div>
+            <div class="lineitem"><span class="k" id="sf-pi-label">Principal &amp; interest</span><span class="v" id="sf-pi">$0</span></div>
+            <div class="lineitem"><span class="k">Taxes + insurance + HOA + fees</span><span class="v" id="sf-escrow">$0</span></div>
+            <div class="lineitem"><span class="k">Vacancy + maint/mgmt reserve</span><span class="v" id="sf-reserve">$0</span></div>
+            <div class="lineitem"><span class="k">Monthly cashflow</span><span class="v" id="sf-cashflow">$0</span></div>
+            <div class="lineitem"><span class="k">Cash invested</span><span class="v" id="sf-cashinvested">$0</span></div>
+            <div class="lineitem"><span class="k">DSCR</span><span class="v"><span class="badge" id="sf-badge"><span class="dot"></span><span id="sf-dscr">0.00</span></span></span></div>
+            <div class="lineitem total"><span class="k">Cash-on-cash return</span><span class="v"><span class="badge" id="sf-coc-badge"><span class="dot"></span><span id="sf-coc">0.0%</span></span></span></div>
+          </div>
+          <div class="note" id="sf-dates">
+            First payment: <strong id="sf-fpd-out">—</strong>
+          </div>
+        </div>
+
+        <div class="balloon-callout" id="sf-balloon-callout" style="display:none;">
+          <div class="bc-eyebrow">Balloon payment due</div>
+          <div class="bc-amount" id="sf-balloon-amount">$0</div>
+          <div class="bc-sub">Due <strong id="sf-balloon-date">—</strong> &nbsp;·&nbsp; <span id="sf-balloon-paydown">—</span></div>
+        </div>
+
+        <div class="balloon-callout" id="sf-io-callout" style="display:none;">
+          <div class="bc-eyebrow">Interest-only balloon due at term</div>
+          <div class="bc-amount" id="sf-io-balloon-amount">$0</div>
+          <div class="bc-sub">Full principal due in <strong id="sf-io-balloon-term">—</strong> — until then you're paying interest only. <span id="sf-io-total-interest">—</span></div>
+        </div>
+
+        <div class="slip">
+          <div class="hero">
+            <div class="hv" id="sf-recprice">$0</div>
+            <div class="hl" id="sf-rechl">Recommended offer</div>
+          </div>
+          <div class="lineitems">
+            <div class="lineitem"><span class="k">Vs. asking price</span><span class="v" id="sf-recvsask">$0 (0%)</span></div>
+            <div class="lineitem"><span class="k">Cash invested at this offer</span><span class="v" id="sf-reccash">$0</span></div>
+            <div class="lineitem total"><span class="k">Cash-on-cash at this offer</span><span class="v" id="sf-reccoc">0.0%</span></div>
+          </div>
+          <div class="note">
+            Using your current down %, rate &amp; term — at asking price: <strong id="sf-coc-atask">0.0%</strong> CoC. At full +<span id="sf-premium-label">10</span>% over asking: <strong id="sf-coc-atcap">0.0%</strong> CoC.
+            <span id="sf-rec-explain"></span>
+          </div>
+        </div>
+
+        <div class="slip" id="sf-netoffer-slip" style="display:none;">
+          <div class="hero">
+            <div class="hv" id="sf-netoffer">$0</div>
+            <div class="hl">Max offer to seller (after commission &amp; your fee)</div>
+          </div>
+          <div class="lineitems">
+            <div class="lineitem"><span class="k">Recommended offer (above)</span><span class="v" id="sf-netoffer-base">$0</span></div>
+            <div class="lineitem" id="sf-netoffer-comm-row" style="display:none;"><span class="k">Less: agent commission</span><span class="v" id="sf-netoffer-comm">$0</span></div>
+            <div class="lineitem" id="sf-netoffer-fee-row" style="display:none;"><span class="k">Less: your assignment fee</span><span class="v" id="sf-netoffer-fee">$0</span></div>
+          </div>
+          <p class="note warning" id="sf-netoffer-warning" style="display:none;">Commission + assignment fee exceed the recommended offer — this doesn't work at this fee/commission level. Lower one of them or find more spread in the deal.</p>
+        </div>
+
+        <div class="ledger">
+          <button class="amort-toggle" id="sf-amort-toggle" type="button">
+            <span>Amortization schedule</span><span class="at-line"></span><span class="amort-chevron">▾</span>
+          </button>
+          <div class="amort-scroll" id="sf-amort-wrap" style="display:none;">
+            <table class="amort-table">
+              <thead><tr><th>Yr</th><th>Payment</th><th>Principal</th><th>Interest</th><th>Balance</th></tr></thead>
+              <tbody id="sf-amort-rows"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <button class="copy-btn" id="copy-sellerfi-btn" type="button">📋 Copy summary</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 3: SUB-TO / TRUST ACQUISITION ============ -->
+  <div class="tab-panel" id="panel-subto">
+    <div class="panel-grid">
+      <div class="col-inputs">
+        <div class="ledger">
+          <p class="ledger-title">Existing Loan Being Taken Over</p>
+          <div class="grid">
+            <div class="field full">
+              <label>Existing loan balance</label>
+              <div class="input-wrap has-prefix"><span class="prefix">$</span>
+                <input type="number" id="st-balance" value="220000" min="0" step="1000" inputmode="decimal">
+              </div>
+            </div>
+            <div class="field">
+              <label>Existing rate</label>
+              <div class="input-wrap has-suffix">
+                <input type="number" id="st-rate" value="4.5" min="0" step="0.125" inputmode="decimal">
+                <span class="suffix">%</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>Remaining term</label>
+              <div class="input-wrap has-suffix">
+                <input type="number" id="st-term" value="27" min="1" step="1" inputmode="decimal">
+                <span class="suffix">yrs</span>
+              </div>
+            </div>
+            <div class="field full">
+              <label>Market rate today <span class="opt">(to compare this loan against)</span></label>
+              <div class="input-wrap has-suffix">
+                <input type="number" id="st-marketrate" value="7.5" min="0" step="0.125" inputmode="decimal">
+                <span class="suffix">%</span>
+              </div>
+            </div>
+            <div class="checkrow">
+              <input type="checkbox" id="st-override-on">
+              <label for="st-override-on">I know the exact existing payment (P&amp;I)</label>
+            </div>
+            <div class="field full" id="st-override-field" style="display:none;">
+              <label>Known existing P&amp;I payment</label>
+              <div class="input-wrap has-prefix"><span class="prefix">$</span>
+                <input type="number" id="st-override-amt" value="0" min="0" step="10" inputmode="decimal">
+              </div>
+            </div>
+            <div class="checkrow">
+              <input type="checkbox" id="st-escrowed-on">
+              <label for="st-escrowed-on">Taxes &amp; insurance already included in that payment</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="ledger">
+          <p class="ledger-title">Cash &amp; Carryback To Seller <span class="opt" style="font-size:10px;font-style:italic;">(optional)</span></p>
+          <div class="grid">
+            <div class="field full">
+              <label>Total offer price <span class="opt">(optional — auto-fills the 2nd note below)</span></label>
+              <div class="input-wrap has-prefix"><span class="prefix">$</span>
+                <input type="number" id="st-offerprice" value="0" min="0" step="1000" inputmode="decimal">
+              </div>
+            </div>
+            <div class="field">
+              <label>Cash to seller at closing</label>
+              <div class="input-wrap has-prefix"><span class="prefix">$</span>
+                <input type="number" id="st-cash" value="0" min="0" step="500" inputmode="decimal">
+              </div>
+            </div>
+            <div class="field">
+              <label>Seller carryback / 2nd <span class="opt" id="st-2nd-mode-label"></span></label>
+              <div class="input-wrap has-prefix"><span class="prefix">$</span>
+                <input type="number" id="st-2ndamt" value="0" min="0" step="500" inputmode="decimal">
+              </div>
+            </div>
+            <div class="field">
+              <label>2nd rate</label>
+              <div class="input-wrap has-suffix">
+                <input type="number" id="st-2ndrate" value="8" min="0" step="0.125" inputmode="decimal">
+                <span class="suffix">%</span>
+              </div>
+            </div>
+            <div class="field">
+              <label id="st-2ndterm-label">2nd term</label>
+              <div class="input-wrap has-suffix">
+                <input type="number" id="st-2ndterm" value="10" min="1" step="1" inputmode="decimal">
+                <span class="suffix">yrs</span>
+              </div>
+            </div>
+            <div class="field full">
+              <label>2nd note structure</label>
+              <select id="st-2ndtype">
+                <option value="amortizing">Fully amortizing — P&amp;I every month</option>
+                <option value="iononly">Interest-only — lump principal due at term</option>
+                <option value="deferred">Fully deferred — $0/mo, accrues, due at payoff</option>
+              </select>
+            </div>
+          </div>
+          <p class="note warning" id="st-offer-warning" style="display:none;">Cash to seller + existing balance already meets or exceeds your total offer price — there's nothing left to finance as a 2nd note. Raise the total offer price, or lower the cash/existing balance.</p>
+        </div>
+      </div>
+
+      <div class="col-results" id="st-results-col">
+        <div class="rate-callout" id="st-rate-callout">
+          <div class="rc-eyebrow" id="st-rate-eyebrow">Rate check</div>
+          <div class="rc-amount" id="st-rate-amount">$0/mo</div>
+          <div class="rc-sub" id="st-rate-sub">—</div>
+        </div>
+
+        <div class="slip">
+          <div class="hero">
+            <div class="hv" id="st-totalpmt">$0</div>
+            <div class="hl">Total monthly payment</div>
+          </div>
+          <div class="lineitems">
+            <div class="lineitem"><span class="k">Existing P&amp;I</span><span class="v" id="st-existingpi">$0</span></div>
+            <div class="lineitem"><span class="k">2nd / carryback P&amp;I</span><span class="v" id="st-2ndpi">$0</span></div>
+            <div class="lineitem"><span class="k">Total deal price</span><span class="v" id="st-totalprice">$0</span></div>
+            <div class="lineitem"><span class="k">Vacancy + maint/mgmt reserve</span><span class="v" id="st-reserve">$0</span></div>
+            <div class="lineitem"><span class="k">Monthly cashflow</span><span class="v" id="st-cashflow">$0</span></div>
+            <div class="lineitem total"><span class="k">DSCR</span><span class="v"><span class="badge" id="st-badge"><span class="dot"></span><span id="st-dscr">0.00</span></span></span></div>
+          </div>
+          <div class="note">
+            <strong>Room for more cash/carryback at target DSCR:</strong> <span id="st-maxadd">$0</span>
+            — using the 2nd's rate &amp; term above, this is how much additional carryback/financed cash you could still add to your offer and hold your target DSCR.
+          </div>
+        </div>
+
+        <div class="balloon-callout" id="st-2nd-due-callout" style="display:none;">
+          <div class="bc-eyebrow" id="st-2nd-due-eyebrow">2nd note payoff due</div>
+          <div class="bc-amount" id="st-2nd-due-amount">$0</div>
+          <div class="bc-sub" id="st-2nd-due-sub">—</div>
+        </div>
+
+        <div class="ledger">
+          <button class="amort-toggle" id="st-amort-toggle" type="button">
+            <span>Amortization — existing + 2nd combined</span><span class="at-line"></span><span class="amort-chevron">▾</span>
+          </button>
+          <div class="amort-scroll" id="st-amort-wrap" style="display:none;">
+            <table class="amort-table">
+              <thead><tr><th>Yr</th><th>Payment</th><th>Principal</th><th>Interest</th><th>Balance</th></tr></thead>
+              <tbody id="st-amort-rows"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <button class="copy-btn" id="copy-subto-btn" type="button">📋 Copy summary</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 4: FIX & FLIP ============ -->
+  <div class="tab-panel" id="panel-flip">
+    <div class="panel-grid">
+      <div class="col-inputs">
+        <div class="ledger">
+          <p class="ledger-title">ARV Calculator — Recently Sold Comps</p>
+          <div id="flip-comps-list">
+            <div class="comp-row" data-comp-row>
+              <div class="field"><label>Comp 1 sale price</label>
+                <div class="input-wrap has-prefix"><span class="prefix">$</span>
+                  <input type="number" class="comp-price" min="0" step="1000" inputmode="decimal">
+                </div>
+              </div>
+              <div class="field"><label>Sqft</label>
+                <input type="number" class="comp-sqft" min="0" step="10" inputmode="decimal">
+              </div>
+              <button class="comp-remove" type="button" disabled>×</button>
+            </div>
+            <div class="comp-row" data-comp-row>
+              <div class="field"><label>Comp 2 sale price</label>
+                <div class="input-wrap has-prefix"><span class="prefix">$</span>
+                  <input type="number" class="comp-price" min="0" step="1000" inputmode="decimal">
+                </div>
+              </div>
+              <div class="field"><label>Sqft</label>
+                <input type="number" class="comp-sqft" min="0" step="10" inputmode="decimal">
+              </div>
+              <button class="comp-remove" type="button" disabled>×</button>
+            </div>
+            <div class="comp-row" data-comp-row>
+              <div class="field"><label>Comp 3 sale price</label>
+                <div class="input-wrap has-prefix"><span class="prefix">$</span>
+                  <input type="number" class="comp-price" min="0" step="1000" inputmode="decimal">
+                </div>
+              </div>
+              <div class="field"><label>Sqft</label>
+                <input type="number" class="comp-sqft" min="0" step="10" inputmode="decimal">
+              </div>
+              <button class="comp-remove" type="button" disabled>×</button>
+            </div>
+          </div>
+          <button class="add-comp-btn" id="flip-add-comp" type="button">+ Add another comp</button>
+
+          <div class="field full" style="margin-top:14px;">
+            <label>Subject property sqft</label>
+            <input type="number" id="flip-subject-sqft" value="1400" min="0" step="10" inputmode="decimal">
+          </div>
+
+          <div class="noi-strip">
+            <div class="item"><div class="v" id="flip-avg-ppsf">$0</div><div class="l">Avg $/sqft</div></div>
+            <div class="item"><div class="v" id="flip-median-ppsf">$0</div><div class="l">Median $/sqft</div></div>
+            <div class="item"><div class="v" id="flip-calc-arv">$0</div><div class="l">Calc'd ARV</div></div>
+          </div>
+          <p class="note" style="margin-top:10px;border-top:none;padding-top:0;">Based on <strong id="flip-comps-count">0</strong> comp(s) with both price and sqft entered. Add at least 3 for a reliable number — more recent, more similar comps narrow the spread between avg and median.</p>
+          <button class="add-comp-btn" id="flip-use-arv" type="button">↓ Use calculated ARV below</button>
+        </div>
+
+        <div class="ledger">
+          <p class="ledger-title">Quick Max Offer <span class="opt" style="font-size:10px;font-style:italic;">(rule-of-thumb ceiling)</span></p>
+          <div class="grid">
+            <div class="field full">
+              <label>ARV</label>
+              <div class="input-wrap has-prefix"><span class="prefix">$</span>
+                <input type="number" id="flip-arv" value="0" min="0" step="1000" inputmode="decimal">
+              </div>
+            </div>
+            <div class="field">
+              <label>Rehab budget</label>
+              <div class="input-wrap has-prefix"><span class="prefix">$</span>
+                <input type="number" id="flip-rehab" value="30000" min="0" step="500" inputmode="decimal">
+              </div>
+            </div>
+            <div class="field">
+              <label>% of ARV rule</label>
+              <div class="input-wrap has-suffix">
+                <input type="number" id="flip-rule-pct" value="70" min="0" max="100" step="1" inputmode="decimal">
+                <span class="suffix">%</span>
+              </div>
+            </div>
+          </div>
+          <div class="target-row">
+            <span class="lab">Quick set</span>
+            <button class="pillbtn" data-rule="70" type="button">70%</button>
+            <button class="pillbtn" data-rule="75" type="button">75%</button>
+          </div>
+        </div>
+
+        <div class="ledger">
+          <p class="ledger-title">Full Deal Economics</p>
+          <div class="grid">
+            <div class="field full">
+              <label>Purchase price</label>
+              <div class="input-wrap has-prefix"><span class="prefix">$</span>
+                <input type="number" id="flip-price" value="0" min="0" step="1000" inputmode="decimal">
+              </div>
+            </div>
+            <div class="field">
+              <label>Down payment</label>
+              <div class="input-wrap has-suffix">
+                <input type="number" id="flip-downpct" value="10" min="0" max="100" step="1" inputmode="decimal">
+                <span class="suffix">%</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>Lender rate <span class="opt">(hard money)</span></label>
+              <div class="input-wrap has-suffix">
+                <input type="number" id="flip-rate" value="11" min="0" step="0.125" inputmode="decimal">
+                <span class="suffix">%</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>Points <span class="opt">(upfront, on loan)</span></label>
+              <div class="input-wrap has-suffix">
+                <input type="number" id="flip-points" value="2" min="0" step="0.25" inputmode="decimal">
+                <span class="suffix">pts</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>Holding period</label>
+              <div class="input-wrap has-suffix">
+                <input type="number" id="flip-holdmonths" value="5" min="0" step="1" inputmode="decimal">
+                <span class="suffix">mo</span>
+              </div>
+            </div>
+            <div class="field full">
+              <label>Other monthly holding costs <span class="opt">(taxes, insurance, utilities)</span></label>
+              <div class="input-wrap has-prefix"><span class="prefix">$</span>
+                <input type="number" id="flip-holdcosts" value="250" min="0" step="25" inputmode="decimal">
+              </div>
+            </div>
+            <div class="field full">
+              <label>Selling costs <span class="opt">(agent + closing, % of ARV)</span></label>
+              <div class="input-wrap has-suffix">
+                <input type="number" id="flip-sellpct" value="8" min="0" step="0.5" inputmode="decimal">
+                <span class="suffix">%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-results" id="flip-results-col">
+        <div class="slip">
+          <div class="hero">
+            <div class="hv" id="flip-mao">$0</div>
+            <div class="hl">Max allowable offer (rule of thumb)</div>
+          </div>
+          <div class="note">
+            MAO = (ARV × <span id="flip-rule-label">70</span>%) − rehab budget. A fast gut-check ceiling — it doesn't account for financing, holding, or selling costs. Use the full deal economics below for the real number.
+          </div>
+        </div>
+
+        <div class="slip">
+          <div class="hero">
+            <div class="hv" id="flip-profit">$0</div>
+            <div class="hl">Net profit</div>
+          </div>
+          <div class="lineitems">
+            <div class="lineitem"><span class="k">Loan amount</span><span class="v" id="flip-loanamt">$0</span></div>
+            <div class="lineitem"><span class="k">Points cost</span><span class="v" id="flip-pointscost">$0</span></div>
+            <div class="lineitem"><span class="k">Holding costs (interest + other)</span><span class="v" id="flip-totalholding">$0</span></div>
+            <div class="lineitem"><span class="k">Selling costs</span><span class="v" id="flip-sellcost">$0</span></div>
+            <div class="lineitem"><span class="k">Total project cost</span><span class="v" id="flip-totalcost">$0</span></div>
+            <div class="lineitem"><span class="k">Cash invested</span><span class="v" id="flip-cashinvested">$0</span></div>
+            <div class="lineitem"><span class="k">ROI (cash-on-cash)</span><span class="v" id="flip-roi">0.0%</span></div>
+            <div class="lineitem total"><span class="k">Annualized ROI</span><span class="v" id="flip-annroi">0.0%</span></div>
+          </div>
+        </div>
+
+        <button class="copy-btn" id="copy-flip-btn" type="button">📋 Copy summary</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Estimates for quick deal-screening on calls only. Always verify taxes, insurance, HOA dues, and exact financing terms before going to contract.
+  </footer>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const num = id => { const v = parseFloat($(id).value); return isNaN(v) ? 0 : v; };
+  const fmt = n => {
+    if (!isFinite(n)) return '$0';
+    const sign = n < 0 ? '-' : '';
+    return sign + '$' + Math.abs(Math.round(n)).toLocaleString('en-US');
+  };
+  const fmt2 = n => isFinite(n) ? n.toFixed(2) : '0.00';
+
+  // ---- core finance helpers ----
+  function pmt(principal, annualRatePct, years){
+    const n = Math.max(years,0) * 12;
+    if (n <= 0) return 0;
+    const r = annualRatePct/100/12;
+    if (r === 0) return principal / n;
+    return principal * r * Math.pow(1+r, n) / (Math.pow(1+r, n) - 1);
+  }
+  function maxLoanFromPayment(payment, annualRatePct, years){
+    const n = Math.max(years,0) * 12;
+    if (n <= 0) return 0;
+    const r = annualRatePct/100/12;
+    if (payment <= 0) return 0;
+    if (r === 0) return payment * n;
+    return payment * (1 - Math.pow(1+r, -n)) / r;
+  }
+  function remainingBalance(loan, annualRatePct, totalYears, elapsedYears){
+    const n = Math.max(totalYears,0) * 12;
+    const p = pmt(loan, annualRatePct, totalYears);
+    if (Math.max(elapsedYears,0)*12 >= n) return 0;
+    return remainingBalanceWithPayment(loan, annualRatePct, p, elapsedYears);
+  }
+  function remainingBalanceWithPayment(loan, annualRatePct, payment, elapsedYears){
+    const k = Math.max(elapsedYears,0) * 12;
+    const r = annualRatePct/100/12;
+    if (r === 0) return Math.max(loan - payment*k, 0);
+    return Math.max(loan*Math.pow(1+r,k) - payment*(Math.pow(1+r,k)-1)/r, 0);
+  }
+  function dscrTier(d){
+    if (d >= 1.25) return 'good';
+    if (d >= 1.00) return 'warn';
+    return 'bad';
+  }
+  function setBadge(badgeEl, dscrEl, dscr){
+    const tier = dscrTier(dscr);
+    badgeEl.className = 'badge ' + tier;
+    dscrEl.textContent = fmt2(dscr) + 'x';
+  }
+  function cocTier(coc, target){
+    if (coc >= target) return 'good';
+    if (coc >= 0) return 'warn';
+    return 'bad';
+  }
+  function setCocBadge(badgeEl, valEl, coc, target){
+    badgeEl.className = 'badge ' + cocTier(coc, target);
+    valEl.textContent = (coc*100).toFixed(1) + '%';
+  }
+  function paymentFactor(annualRatePct, years){
+    const n = Math.max(years,0)*12;
+    if (n <= 0) return 0;
+    const r = annualRatePct/100/12;
+    if (r === 0) return 1/n;
+    return r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
+  }
+  function setHealthBorder(elId, tier){
+    const el = $(elId);
+    if (!el) return;
+    el.classList.remove('health-good','health-warn','health-bad');
+    el.classList.add('health-' + tier);
+  }
+
+  // ---- amortization schedule builders ----
+  function buildSFAmortRows(loan, ratePct, payment, termYears, paytype, balloonYears){
+    if (loan <= 0) return '<tr><td colspan="5" style="text-align:center;color:var(--ink-dim);">Enter loan terms to see the schedule</td></tr>';
+    const cap = Math.min(balloonYears && balloonYears > 0 ? balloonYears : termYears, 40);
+    let rows = '';
+    let balPrev = loan;
+    for (let y = 1; y <= cap; y++){
+      let balEnd, principal, interest, annualPayment;
+      const isBalloon = balloonYears > 0 && y === cap;
+      if (paytype === 'iononly') {
+        balEnd = isBalloon ? 0 : loan; // IO — balance flat until balloon
+        const interestThisYear = payment * 12;
+        const principalThisYear = isBalloon ? loan : 0;
+        annualPayment = interestThisYear + principalThisYear;
+        principal = principalThisYear;
+        interest = interestThisYear;
+      } else {
+        balEnd = remainingBalanceWithPayment(loan, ratePct, payment, y);
+        if (isBalloon) balEnd = 0;
+        annualPayment = payment * 12;
+        principal = Math.max(balPrev - balEnd, 0);
+        interest = Math.max(annualPayment - principal, 0);
+      }
+      rows += `<tr class="${isBalloon ? 'balloon-row' : ''}"><td>${y}${isBalloon ? ' ⚑' : ''}</td><td>${fmt(annualPayment)}</td><td>${fmt(principal)}</td><td>${fmt(interest)}</td><td>${fmt(balEnd)}</td></tr>`;
+      balPrev = balEnd;
+      if (balEnd <= 0) break;
+    }
+    return rows;
+  }
+
+  function buildAmortRows(loan, ratePct, payment, termYears, balloonYears){
+    if (loan <= 0 || payment <= 0) return '<tr><td colspan="5" style="text-align:center;color:var(--ink-dim);">Enter loan terms to see the schedule</td></tr>';
+    const cap = Math.min(balloonYears && balloonYears > 0 ? balloonYears : termYears, 40);
+    let rows = '';
+    let balPrev = loan;
+    for (let y = 1; y <= cap; y++){
+      const balEnd = remainingBalanceWithPayment(loan, ratePct, payment, y);
+      const principal = Math.max(balPrev - balEnd, 0);
+      const annualPayment = payment * 12;
+      const interest = Math.max(annualPayment - principal, 0);
+      const isBalloon = balloonYears && balloonYears > 0 && y === cap;
+      rows += `<tr class="${isBalloon ? 'balloon-row' : ''}"><td>${y}${isBalloon ? ' ⚑' : ''}</td><td>${fmt(annualPayment)}</td><td>${fmt(principal)}</td><td>${fmt(interest)}</td><td>${fmt(balEnd)}</td></tr>`;
+      balPrev = balEnd;
+      if (balEnd <= 0) break;
+    }
+    return rows;
+  }
+
+  function buildSubToAmortRows(existLoan, existRate, existPmt, existTerm, secLoan, secRate, secPmt, secTerm, secType){
+    if (existLoan <= 0 || existPmt <= 0) return '<tr><td colspan="5" style="text-align:center;color:var(--ink-dim);">Enter the existing loan to see the schedule</td></tr>';
+    const cap = Math.min(Math.max(existTerm, 0), 40);
+    let rows = '';
+    let ePrev = existLoan;
+    let sPrev = secLoan > 0 ? secLoan : 0;
+    for (let y = 1; y <= cap; y++){
+      const eEnd = remainingBalanceWithPayment(existLoan, existRate, existPmt, y);
+      const existPrincipal = Math.max(ePrev - eEnd, 0);
+      const existPaymentYr = existPmt * 12;
+      const existInterest = Math.max(existPaymentYr - existPrincipal, 0);
+
+      let secPaymentYr = 0, secPrincipal = 0, secInterest = 0, sEnd = 0, isPayoffRow = false;
+      if (secLoan > 0) {
+        if (secType === 'amortizing') {
+          if (y <= secTerm) {
+            sEnd = remainingBalanceWithPayment(secLoan, secRate, secPmt, y);
+            secPrincipal = Math.max(sPrev - sEnd, 0);
+            secPaymentYr = secPmt * 12;
+            secInterest = Math.max(secPaymentYr - secPrincipal, 0);
+          }
+        } else if (secType === 'iononly') {
+          if (y < secTerm) {
+            sEnd = secLoan;
+            secPaymentYr = secPmt * 12;
+            secInterest = secPaymentYr;
+          } else if (y === secTerm) {
+            sEnd = 0;
+            secPrincipal = sPrev;
+            secInterest = secPmt * 12;
+            secPaymentYr = secPrincipal + secInterest;
+            isPayoffRow = true;
+          }
+        } else { // deferred
+          if (y < secTerm) {
+            const r = secRate/100/12;
+            sEnd = secLoan * Math.pow(1+r, y*12);
+          } else if (y === secTerm) {
+            sEnd = 0;
+            secPrincipal = secLoan;
+            secInterest = Math.max(sPrev - secLoan, 0);
+            secPaymentYr = sPrev;
+            isPayoffRow = true;
+          }
+        }
+      }
+
+      const balEnd = eEnd + sEnd;
+      const principal = existPrincipal + secPrincipal;
+      const interest = existInterest + secInterest;
+      const paymentThisYear = existPaymentYr + secPaymentYr;
+      rows += `<tr class="${isPayoffRow ? 'balloon-row' : ''}"><td>${y}${isPayoffRow ? ' ⚑' : ''}</td><td>${fmt(paymentThisYear)}</td><td>${fmt(principal)}</td><td>${fmt(interest)}</td><td>${fmt(balEnd)}</td></tr>`;
+      ePrev = eEnd; sPrev = sEnd;
+      if (balEnd <= 0 && eEnd <= 0) break;
+    }
+    return rows;
+  }
+
+  function wireAmortToggle(toggleId, wrapId){
+    $(toggleId).addEventListener('click', function(){
+      const isOpen = $(wrapId).style.display !== 'none';
+      $(wrapId).style.display = isOpen ? 'none' : '';
+      this.classList.toggle('open', !isOpen);
+    });
+  }
+
+  // ---- copy summary ----
+  function flashCopied(btn, text){
+    navigator.clipboard.writeText(text).then(()=>{
+      const orig = btn.textContent;
+      btn.textContent = '✓ Copied to clipboard';
+      setTimeout(()=>{ btn.textContent = orig; }, 1600);
+    }).catch(()=>{
+      const orig = btn.textContent;
+      btn.textContent = 'Copy failed — select manually';
+      setTimeout(()=>{ btn.textContent = orig; }, 2000);
+    });
+  }
+  function wireCopyButton(btnId, buildText){
+    const btn = $(btnId);
+    btn.addEventListener('click', function(){ flashCopied(btn, buildText()); });
+  }
+
+  // ---- shared property/income ----
+  function getShared(){
+    return {
+      rent: num('rent'),
+      vacancy: num('vacancy'),
+      maintmgmt: num('maintmgmt'),
+      taxes: num('taxes'),
+      insurance: num('insurance'),
+      hoa: num('hoa'),
+      otherfees: num('otherfees'),
+      targetDscr: num('targetdscr')
+    };
+  }
+  function computeNOI(s){
+    const egi = s.rent * (1 - s.vacancy/100);
+    const opexPct = egi * (s.maintmgmt/100);
+    const opex = s.taxes + s.insurance + s.hoa + s.otherfees + opexPct;
+    const noi = egi - opex;
+    return {egi, opex, noi};
+  }
+  function renderShared(){
+    const s = getShared();
+    const {egi, opex, noi} = computeNOI(s);
+    $('out-egi').textContent = fmt(egi);
+    $('out-opex').textContent = fmt(opex);
+    $('out-noi').textContent = fmt(noi);
+    return {s, egi, opex, noi};
+  }
+
+  // ---- Tab 1: Max Offer ----
+  function renderMaxOffer(noi, targetDscr){
+    const rate = num('mo-rate');
+    const term = num('mo-term');
+    const downPct = num('mo-down');
+    const assignFee = num('mo-assignfee');
+
+    function solve(target){
+      const maxDS = target > 0 ? noi/target : 0;
+      const maxLoan = Math.max(maxDS, 0) > 0 ? maxLoanFromPayment(Math.max(maxDS,0), rate, term) : 0;
+      const denom = (1 - downPct/100);
+      const maxPrice = denom > 0 ? maxLoan/denom : maxLoan;
+      return {maxDS: Math.max(maxDS,0), maxLoan: Math.max(maxLoan,0), maxPrice: Math.max(maxPrice,0)};
+    }
+
+    const r = solve(targetDscr);
+    const offerToSeller = Math.max(r.maxPrice - assignFee, 0);
+
+    if (assignFee > 0) {
+      $('mo-hero-label').textContent = 'Max offer to seller (after your fee)';
+      $('mo-maxprice').textContent = fmt(offerToSeller);
+      $('mo-endbuyer-row').style.display = '';
+      $('mo-fee-row').style.display = '';
+      $('mo-endbuyerprice').textContent = fmt(r.maxPrice);
+      $('mo-feeamt').textContent = '-' + fmt(assignFee);
+      $('mo-fee-warning').style.display = (r.maxPrice - assignFee) < 0 ? '' : 'none';
+      $('mo-cmp-fee-note').textContent = ' (after your fee)';
+    } else {
+      $('mo-hero-label').textContent = 'Max offer at target DSCR';
+      $('mo-maxprice').textContent = fmt(r.maxPrice);
+      $('mo-endbuyer-row').style.display = 'none';
+      $('mo-fee-row').style.display = 'none';
+      $('mo-fee-warning').style.display = 'none';
+      $('mo-cmp-fee-note').textContent = '';
+    }
+
+    $('mo-maxloan').textContent = fmt(r.maxLoan);
+    $('mo-downamt').textContent = fmt(r.maxPrice * downPct/100);
+    $('mo-pi').textContent = fmt(r.maxDS);
+    $('mo-noi').textContent = fmt(noi) + '/mo';
+
+    $('cmp-125').textContent = fmt(Math.max(solve(1.25).maxPrice - assignFee, 0));
+    $('cmp-100').textContent = fmt(Math.max(solve(1.00).maxPrice - assignFee, 0));
+
+    setHealthBorder('mo-results-col', dscrTier(targetDscr > 0 ? targetDscr : 0));
+    $('mo-amort-rows').innerHTML = buildAmortRows(r.maxLoan, rate, r.maxDS, term, 0);
+
+    window.__mo_summary = () => `THE DEAL LEDGER — Max Offer Summary\nTarget DSCR: ${$('targetdscr').value}\nRate/Term/Down: ${rate}% / ${term}yr / ${downPct}%\n${assignFee > 0 ? `Max Price End Buyer Supports: ${fmt(r.maxPrice)}\nYour Assignment Fee: ${fmt(assignFee)}\nMax Offer to Seller: ${fmt(offerToSeller)}` : `Max Offer Price: ${fmt(r.maxPrice)}`}\nMax Loan: ${$('mo-maxloan').textContent}\nDown Payment: ${$('mo-downamt').textContent}\nMonthly P&I: ${$('mo-pi').textContent}\nNOI used: ${$('mo-noi').textContent}`;
+  }
+
+  // ---- Tab 2: Seller Finance ----
+  let sfLastEdited = 'pct';
+  let lastCalcArv = 0;
+  function renderSellerFinance(s, targetDscr){
+    const price = num('sf-price');
+    let downPct = num('sf-downpct');
+    let downAmt = num('sf-downamt');
+
+    if (sfLastEdited === 'pct') {
+      downAmt = price * downPct/100;
+      $('sf-downamt').value = downAmt ? Math.round(downAmt) : 0;
+    } else {
+      downPct = price > 0 ? (downAmt/price*100) : 0;
+      $('sf-downpct').value = downPct ? +downPct.toFixed(2) : 0;
+    }
+
+    const loan = Math.max(price - downAmt, 0);
+    const rate = num('sf-rate');
+    const term = num('sf-term');
+    const paytype = $('sf-paytype').value;
+    const calcPI = pmt(loan, rate, term);
+    const ioPI = loan * (rate/100/12);
+
+    // update term label
+    const termLabels = {
+      amortizing: 'Term (amortized over)',
+      iononly: 'Interest-only term (balloon at end)',
+      custom: 'Term'
+    };
+    $('sf-term-label').innerHTML = `<span>${termLabels[paytype]}</span>`;
+
+    let pi;
+    if (paytype === 'amortizing') pi = calcPI;
+    else if (paytype === 'iononly') pi = ioPI;
+    else pi = num('sf-pi-override-amt');
+
+    $('sf-custom-pi-field').style.display = paytype === 'custom' ? '' : 'none';
+    $('sf-pi-calc-ref').textContent = fmt(calcPI);
+
+    const piLabel = {
+      amortizing: 'Principal & interest',
+      iononly: 'Interest-only payment',
+      custom: 'Principal & interest (custom)'
+    };
+    $('sf-pi-label').textContent = piLabel[paytype];
+
+    // IO balloon callout
+    $('sf-io-callout').style.display = paytype === 'iononly' ? '' : 'none';
+    if (paytype === 'iononly') {
+      $('sf-io-balloon-amount').textContent = fmt(loan);
+      $('sf-io-balloon-term').textContent = `${term} yr${term===1?'':'s'}`;
+      $('sf-io-total-interest').textContent = `Total interest paid: ${fmt(ioPI * term * 12)} over ${term} yr${term===1?'':'s'}.`;
+    }
+
+    // IO note on balloon checkbox
+    $('sf-balloon-io-note').textContent = paytype === 'iononly' ? '(sets a mid-term refi date before the IO term ends)' : '';
+
+    const escrow = s.taxes + s.insurance + s.hoa + s.otherfees;
+    const totalPmt = pi + escrow;
+
+    $('sf-loanamt').textContent = fmt(loan);
+    $('sf-pi').textContent = fmt(pi);
+    $('sf-escrow').textContent = fmt(escrow);
+    $('sf-totalpmt').textContent = fmt(totalPmt);
+
+    const {egi, noi} = computeNOI(s);
+    const reserve = s.rent*(s.vacancy/100) + egi*(s.maintmgmt/100);
+    $('sf-reserve').textContent = fmt(reserve);
+    const dscr = pi > 0 ? noi/pi : 0;
+    setBadge($('sf-badge'), $('sf-dscr'), dscr);
+    $('sf-cashflow').textContent = fmt(noi - pi);
+    $('sf-cashflow').className = 'v ' + (noi-pi >= 0 ? 'good' : 'bad');
+
+    const extraCash = num('sf-extracash');
+    const assignFeeForCoC = num('sf-assignmentfee');
+    const cashInvested = downAmt + extraCash + assignFeeForCoC;
+    const annualCF = (noi - pi) * 12;
+    const coc = cashInvested > 0 ? annualCF / cashInvested : 0;
+    const targetCoC = num('sf-targetcoc') / 100;
+    $('sf-cashinvested').textContent = fmt(cashInvested);
+    setCocBadge($('sf-coc-badge'), $('sf-coc'), coc, targetCoC);
+
+    setHealthBorder('sf-results-col', dscrTier(dscr));
+
+    const maxPremiumPct = num('sf-maxpremium');
+    const k = paymentFactor(rate, term);
+    const d = downPct/100;
+    const T = targetCoC;
+    const totalFixedCash = extraCash + assignFeeForCoC;
+    const denom = T*d + 12*(1-d)*k;
+    let priceForTarget = denom > 0 ? (12*noi - T*totalFixedCash) / denom : Infinity;
+    priceForTarget = Math.max(priceForTarget, 0);
+    const cap = price * (1 + maxPremiumPct/100);
+    const recPrice = Math.min(priceForTarget, cap);
+
+    function cocAtPrice(p){
+      const dAmt = p * d;
+      const ln = Math.max(p - dAmt, 0);
+      const piAt = pmt(ln, rate, term);
+      const ci = dAmt + totalFixedCash;
+      return ci > 0 ? ((noi - piAt)*12)/ci : 0;
+    }
+
+    $('sf-recprice').textContent = fmt(recPrice);
+    const vsAsk = recPrice - price;
+    const vsAskPct = price > 0 ? (vsAsk/price*100) : 0;
+    $('sf-recvsask').textContent = (vsAsk>=0?'+':'') + fmt(vsAsk) + ' (' + (vsAskPct>=0?'+':'') + vsAskPct.toFixed(1) + '%)';
+    const recCash = recPrice*d + totalFixedCash;
+    $('sf-reccash').textContent = fmt(recCash);
+    const recCoc = cocAtPrice(recPrice);
+    $('sf-reccoc').textContent = (recCoc*100).toFixed(1) + '%';
+    $('sf-coc-atask').textContent = (cocAtPrice(price)*100).toFixed(1) + '%';
+    $('sf-coc-atcap').textContent = (cocAtPrice(cap)*100).toFixed(1) + '%';
+    $('sf-premium-label').textContent = maxPremiumPct;
+
+    let explain = '';
+    if (priceForTarget >= cap) {
+      explain = `You can offer the full +${maxPremiumPct}% over asking and still clear your ${num('sf-targetcoc')}% CoC target.`;
+    } else if (priceForTarget < price) {
+      explain = `Even asking price misses your ${num('sf-targetcoc')}% CoC target at these terms — this recommendation is below asking. Consider more down, a lower rate, or a longer term.`;
+    } else {
+      explain = `This is the most you can offer above asking while still hitting your ${num('sf-targetcoc')}% CoC target.`;
+    }
+    $('sf-rec-explain').textContent = ' ' + explain;
+
+    // ---- agent commission + assignment fee -> max offer to seller ----
+    const commissionMode = $('sf-commission-mode').value;
+    let commissionAmt = 0;
+    if (commissionMode === 'pct') commissionAmt = price * (num('sf-commission-pct')/100);
+    else if (commissionMode === 'flat') commissionAmt = num('sf-commission-flat');
+    const assignFee = num('sf-assignmentfee');
+
+    if (commissionAmt > 0 || assignFee > 0) {
+      const netOffer = recPrice - commissionAmt - assignFee;
+      $('sf-netoffer-slip').style.display = '';
+      $('sf-netoffer').textContent = fmt(Math.max(netOffer, 0));
+      $('sf-netoffer-base').textContent = fmt(recPrice);
+      if (commissionAmt > 0) {
+        $('sf-netoffer-comm-row').style.display = '';
+        $('sf-netoffer-comm').textContent = '-' + fmt(commissionAmt);
+      } else {
+        $('sf-netoffer-comm-row').style.display = 'none';
+      }
+      if (assignFee > 0) {
+        $('sf-netoffer-fee-row').style.display = '';
+        $('sf-netoffer-fee').textContent = '-' + fmt(assignFee);
+      } else {
+        $('sf-netoffer-fee-row').style.display = 'none';
+      }
+      $('sf-netoffer-warning').style.display = netOffer < 0 ? '' : 'none';
+    } else {
+      $('sf-netoffer-slip').style.display = 'none';
+    }
+
+    const fpdVal = $('sf-fpd').value;
+    let dateNote = '—';
+    let fpd = null;
+    if (fpdVal) {
+      fpd = new Date(fpdVal + 'T00:00:00');
+      dateNote = fpd.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+    }
+    $('sf-fpd-out').textContent = dateNote;
+
+    const balloonOn = $('sf-balloon-on').checked;
+    $('sf-balloon-callout').style.display = balloonOn ? '' : 'none';
+    let balloonYearsForAmort = 0;
+    if (balloonOn) {
+      const by = num('sf-balloon-years');
+      balloonYearsForAmort = by;
+      // For IO notes, balance never amortizes — balloon is always the full loan amount
+      const bal = paytype === 'iononly' ? loan : remainingBalanceWithPayment(loan, rate, pi, by);
+      const paidDown = loan - bal;
+      $('sf-balloon-amount').textContent = fmt(bal);
+      if (fpd) {
+        const balloonDate = new Date(fpd);
+        balloonDate.setFullYear(balloonDate.getFullYear() + by);
+        $('sf-balloon-date').textContent = balloonDate.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      } else {
+        $('sf-balloon-date').textContent = `${by} yr${by==1?'':'s'} after first payment`;
+      }
+      $('sf-balloon-paydown').textContent = paytype === 'iononly'
+        ? `interest-only note — full principal of ${fmt(loan)} owed at balloon`
+        : paidDown >= 0
+          ? `principal paid down ${fmt(paidDown)} from ${fmt(loan)}`
+          : `⚠ balance growing — your P&I doesn't cover the interest, up ${fmt(Math.abs(paidDown))} from ${fmt(loan)}`;
+    }
+
+    $('sf-amort-rows').innerHTML = buildSFAmortRows(loan, rate, pi, term, paytype, balloonYearsForAmort);
+
+    window.__sf_summary = () => `THE DEAL LEDGER — Seller Finance Summary\nAsking/Offer Price: ${fmt(price)} (${downPct.toFixed(1)}% down = ${fmt(downAmt)})\nLoan: ${fmt(loan)} @ ${rate}% / ${term}yr [${paytype}]${balloonOn ? ' (balloon in ' + num('sf-balloon-years') + 'yr)' : ''}\nPayment: ${$('sf-pi').textContent}/mo\nTotal Monthly Payment: ${$('sf-totalpmt').textContent}\nDSCR: ${$('sf-dscr').textContent} | Cash-on-Cash: ${$('sf-coc').textContent}\nMonthly Cashflow: ${$('sf-cashflow').textContent}\nRecommended Offer: ${$('sf-recprice').textContent}`;
+  }
+
+  // ---- Tab 3: Sub-To ----
+  function renderSubTo(s, targetDscr){
+    const balance = num('st-balance');
+    const rate = num('st-rate');
+    const term = num('st-term');
+    const overrideOn = $('st-override-on').checked;
+    const existingPI = overrideOn ? num('st-override-amt') : pmt(balance, rate, term);
+
+    const marketRate = num('st-marketrate');
+    const marketPI = pmt(balance, marketRate, term);
+    const savings = marketPI - existingPI;
+    const rcEl = $('st-rate-callout');
+    if (Math.abs(savings) < 5) {
+      rcEl.className = 'rate-callout warn';
+      $('st-rate-eyebrow').textContent = 'Rate check — about the same as market';
+    } else if (savings > 0) {
+      rcEl.className = 'rate-callout good';
+      $('st-rate-eyebrow').textContent = 'Rate check — below market';
+    } else {
+      rcEl.className = 'rate-callout bad';
+      $('st-rate-eyebrow').textContent = 'Rate check — above market';
+    }
+    $('st-rate-amount').textContent = fmt(Math.abs(savings)) + '/mo ' + (savings >= 0 ? 'cheaper' : 'more') + ' than market';
+    $('st-rate-sub').innerHTML = `Existing payment <strong>${fmt(existingPI)}/mo</strong> at ${fmt2(rate)}% vs <strong>${fmt(marketPI)}/mo</strong> at today's ${fmt2(marketRate)}% market rate — same balance &amp; term.`;
+
+    const cash = num('st-cash');
+    const offerPrice = num('st-offerprice');
+    let secAmt;
+    if (offerPrice > 0) {
+      secAmt = Math.max(offerPrice - balance - cash, 0);
+      $('st-2ndamt').value = Math.round(secAmt);
+      $('st-2ndamt').readOnly = true;
+      $('st-2nd-mode-label').textContent = '(auto)';
+      $('st-offer-warning').style.display = (offerPrice - balance - cash) < 0 ? '' : 'none';
+    } else {
+      secAmt = num('st-2ndamt');
+      $('st-2ndamt').readOnly = false;
+      $('st-2nd-mode-label').textContent = '';
+      $('st-offer-warning').style.display = 'none';
+    }
+
+    const secRate = num('st-2ndrate');
+    const secTerm = num('st-2ndterm');
+    const secType = $('st-2ndtype').value;
+
+    const termLabels = {
+      amortizing: '2nd term',
+      iononly: 'Interest-only term (balloon at end)',
+      deferred: 'Deferred for (payoff due)'
+    };
+    $('st-2ndterm-label').textContent = termLabels[secType];
+
+    let secondPI = 0;
+    if (secAmt > 0) {
+      if (secType === 'amortizing') secondPI = pmt(secAmt, secRate, secTerm);
+      else if (secType === 'iononly') secondPI = secAmt * (secRate/100/12);
+      else secondPI = 0; // deferred — nothing due monthly
+    }
+
+    const totalDS = existingPI + secondPI;
+    const escrowed = $('st-escrowed-on').checked;
+    const extraEscrow = escrowed ? (s.hoa + s.otherfees) : (s.taxes + s.insurance + s.hoa + s.otherfees);
+    const totalPmt = totalDS + extraEscrow;
+
+    const totalPrice = offerPrice > 0 ? offerPrice : (balance + cash + secAmt);
+
+    $('st-existingpi').textContent = fmt(existingPI);
+    $('st-2ndpi').textContent = fmt(secondPI);
+    $('st-totalpmt').textContent = fmt(totalPmt);
+    $('st-totalprice').textContent = fmt(totalPrice);
+
+    const {egi, noi} = computeNOI(s);
+    const reserve = s.rent*(s.vacancy/100) + egi*(s.maintmgmt/100);
+    $('st-reserve').textContent = fmt(reserve);
+    const dscr = totalDS > 0 ? noi/totalDS : 0;
+    setBadge($('st-badge'), $('st-dscr'), dscr);
+    const cashflow = noi - totalDS;
+    $('st-cashflow').textContent = fmt(cashflow);
+    $('st-cashflow').className = 'v ' + (cashflow >= 0 ? 'good' : 'bad');
+
+    setHealthBorder('st-results-col', dscrTier(dscr));
+
+    const maxTotalDS = targetDscr > 0 ? noi/targetDscr : 0;
+    const maxAdditionalDS = maxTotalDS - existingPI;
+    let maxAddText;
+    if (maxAdditionalDS <= 0) {
+      maxAddText = '$0 — existing payment alone already misses target';
+    } else if (secType === 'amortizing') {
+      maxAddText = fmt(maxLoanFromPayment(maxAdditionalDS, secRate, secTerm));
+    } else if (secType === 'iononly') {
+      const r = secRate/100/12;
+      maxAddText = r > 0 ? fmt(maxAdditionalDS / r) : '— enter a 2nd rate above 0%';
+    } else {
+      maxAddText = 'No DSCR limit — a fully deferred note costs $0/mo, so size is bounded by what the seller will accept, not by DSCR.';
+    }
+    $('st-maxadd').textContent = maxAddText;
+
+    // 2nd note payoff-due callout (interest-only balloon or deferred lump sum)
+    const dueCallout = $('st-2nd-due-callout');
+    if (secAmt > 0 && secType !== 'amortizing') {
+      dueCallout.style.display = '';
+      let payoffAmt;
+      if (secType === 'iononly') {
+        payoffAmt = secAmt;
+        $('st-2nd-due-eyebrow').textContent = 'Interest-only balloon due';
+        $('st-2nd-due-sub').innerHTML = `Full principal due in <strong>${secTerm} yr${secTerm==1?'':'s'}</strong> — until then you're only paying interest on this note.`;
+      } else {
+        const r = secRate/100/12;
+        payoffAmt = secAmt * Math.pow(1+r, secTerm*12);
+        $('st-2nd-due-eyebrow').textContent = 'Deferred note payoff due';
+        $('st-2nd-due-sub').innerHTML = `$0/mo until then — this is the full accrued balance (original ${fmt(secAmt)} + compounded interest) due in <strong>${secTerm} yr${secTerm==1?'':'s'}</strong>.`;
+      }
+      $('st-2nd-due-amount').textContent = fmt(payoffAmt);
+    } else {
+      dueCallout.style.display = 'none';
+    }
+
+    $('st-amort-rows').innerHTML = buildSubToAmortRows(balance, rate, existingPI, term, secAmt, secRate, secondPI, secTerm, secType);
+
+    window.__st_summary = () => `THE DEAL LEDGER — Sub-To Summary\nExisting Balance: ${fmt(balance)} @ ${rate}% / ${term}yr remaining\nExisting P&I: ${fmt(existingPI)}\n2nd/Carryback: ${fmt(secAmt)} @ ${secRate}% / ${secTerm}yr (${secType}) -> P&I ${fmt(secondPI)}\nCash to Seller: ${fmt(cash)}\nTotal Deal Price: ${$('st-totalprice').textContent}\nTotal Monthly Payment: ${$('st-totalpmt').textContent}\nDSCR: ${$('st-dscr').textContent}\nMonthly Cashflow: ${$('st-cashflow').textContent}`;
+  }
+
+  // ---- Tab 4: Fix & Flip ----
+  function renderFlip(){
+    const rows = document.querySelectorAll('#flip-comps-list .comp-row');
+    const ppsfList = [];
+    rows.forEach(row=>{
+      const priceEl = row.querySelector('.comp-price');
+      const sqftEl = row.querySelector('.comp-sqft');
+      const price = priceEl ? parseFloat(priceEl.value) : NaN;
+      const sqft = sqftEl ? parseFloat(sqftEl.value) : NaN;
+      if (price > 0 && sqft > 0) ppsfList.push(price/sqft);
+    });
+    let avgPpsf = 0, medianPpsf = 0;
+    if (ppsfList.length > 0) {
+      avgPpsf = ppsfList.reduce((a,b)=>a+b,0) / ppsfList.length;
+      const sorted = [...ppsfList].sort((a,b)=>a-b);
+      const mid = Math.floor(sorted.length/2);
+      medianPpsf = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid-1]+sorted[mid])/2;
+    }
+    const subjectSqft = num('flip-subject-sqft');
+    const calcArv = avgPpsf * subjectSqft;
+    lastCalcArv = calcArv;
+    $('flip-avg-ppsf').textContent = '$' + avgPpsf.toFixed(0);
+    $('flip-median-ppsf').textContent = '$' + medianPpsf.toFixed(0);
+    $('flip-calc-arv').textContent = fmt(calcArv);
+    $('flip-comps-count').textContent = ppsfList.length;
+
+    const arv = num('flip-arv');
+    const rehab = num('flip-rehab');
+    const rulePct = num('flip-rule-pct');
+    const mao = Math.max(arv*(rulePct/100) - rehab, 0);
+    $('flip-mao').textContent = fmt(mao);
+    $('flip-rule-label').textContent = rulePct;
+
+    const price = num('flip-price');
+    const downPct = num('flip-downpct');
+    const rate = num('flip-rate');
+    const points = num('flip-points');
+    const holdMonths = num('flip-holdmonths');
+    const otherHoldMonthly = num('flip-holdcosts');
+    const sellPct = num('flip-sellpct');
+
+    const downAmt = price * downPct/100;
+    const loanAmt = Math.max(price - downAmt, 0);
+    const monthlyInterest = loanAmt * (rate/100/12);
+    const pointsCost = loanAmt * (points/100);
+    const totalHolding = (monthlyInterest + otherHoldMonthly) * holdMonths;
+    const sellCost = arv * (sellPct/100);
+    const totalCost = price + rehab + pointsCost + totalHolding + sellCost;
+    const profit = arv - totalCost;
+    const cashInvested = downAmt + rehab + pointsCost + totalHolding;
+    const roi = cashInvested > 0 ? profit/cashInvested : 0;
+    const annRoi = holdMonths > 0 ? roi * (12/holdMonths) : 0;
+
+    $('flip-loanamt').textContent = fmt(loanAmt);
+    $('flip-pointscost').textContent = fmt(pointsCost);
+    $('flip-totalholding').textContent = fmt(totalHolding);
+    $('flip-sellcost').textContent = fmt(sellCost);
+    $('flip-totalcost').textContent = fmt(totalCost);
+    $('flip-cashinvested').textContent = fmt(cashInvested);
+    $('flip-roi').textContent = (roi*100).toFixed(1) + '%';
+    $('flip-annroi').textContent = (annRoi*100).toFixed(1) + '%';
+    $('flip-profit').textContent = fmt(profit);
+    $('flip-profit').className = 'hv ' + (profit >= 0 ? 'good' : 'bad');
+
+    setHealthBorder('flip-results-col', profit >= 0 ? 'good' : 'bad');
+
+    window.__flip_summary = () => `THE DEAL LEDGER — Fix & Flip Summary\nARV: ${fmt(arv)} (calculated from comps: ${$('flip-calc-arv').textContent})\nPurchase Price: ${fmt(price)} | Rehab: ${fmt(rehab)}\nQuick MAO (${rulePct}% rule): ${$('flip-mao').textContent}\nTotal Project Cost: ${$('flip-totalcost').textContent}\nNet Profit: ${$('flip-profit').textContent}\nROI: ${$('flip-roi').textContent} | Annualized ROI: ${$('flip-annroi').textContent}`;
+  }
+
+  function recalcAll(){
+    const {s, noi} = renderShared();
+    const targetDscr = s.targetDscr;
+    renderMaxOffer(noi, targetDscr);
+    renderSellerFinance(s, targetDscr);
+    renderSubTo(s, targetDscr);
+    renderFlip();
+  }
+
+  // ---- wiring ----
+  document.getElementById('app').addEventListener('input', function(e){
+    if (e.target.id === 'sf-downpct') sfLastEdited = 'pct';
+    if (e.target.id === 'sf-downamt') sfLastEdited = 'amt';
+    recalcAll();
+  });
+  document.getElementById('app').addEventListener('change', recalcAll);
+
+  document.querySelectorAll('.pillbtn[data-dscr]').forEach(btn=>{
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.pillbtn[data-dscr]').forEach(b=>b.classList.remove('active'));
+      this.classList.add('active');
+      $('targetdscr').value = this.dataset.dscr;
+      recalcAll();
+    });
+  });
+  $('targetdscr').addEventListener('input', function(){
+    document.querySelectorAll('.pillbtn[data-dscr]').forEach(b=>b.classList.remove('active'));
+  });
+
+  document.querySelectorAll('.pillbtn[data-rule]').forEach(btn=>{
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.pillbtn[data-rule]').forEach(b=>b.classList.remove('active'));
+      this.classList.add('active');
+      $('flip-rule-pct').value = this.dataset.rule;
+      recalcAll();
+    });
+  });
+  $('flip-rule-pct').addEventListener('input', function(){
+    document.querySelectorAll('.pillbtn[data-rule]').forEach(b=>b.classList.remove('active'));
+  });
+
+  const DEFAULT_COMPS_HTML = $('flip-comps-list').innerHTML;
+
+  $('flip-add-comp').addEventListener('click', function(){
+    $('flip-comps-list').insertAdjacentHTML('beforeend',
+      '<div class="comp-row" data-comp-row>' +
+        '<div class="field"><label>Sale price</label><div class="input-wrap has-prefix"><span class="prefix">$</span>' +
+        '<input type="number" class="comp-price" min="0" step="1000" inputmode="decimal"></div></div>' +
+        '<div class="field"><label>Sqft</label><input type="number" class="comp-sqft" min="0" step="10" inputmode="decimal"></div>' +
+        '<button class="comp-remove" type="button">×</button>' +
+      '</div>'
+    );
+    recalcAll();
+  });
+  $('flip-comps-list').addEventListener('click', function(e){
+    if (e.target.classList.contains('comp-remove') && !e.target.disabled) {
+      e.target.closest('.comp-row').remove();
+      recalcAll();
+    }
+  });
+  $('flip-use-arv').addEventListener('click', function(){
+    $('flip-arv').value = Math.round(lastCalcArv);
+    recalcAll();
+  });
+
+  document.querySelectorAll('.tabbtn').forEach(btn=>{
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.tabbtn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('show'));
+      this.classList.add('active');
+      $('panel-' + this.dataset.tab).classList.add('show');
+    });
+  });
+
+  $('sf-balloon-on').addEventListener('change', function(){
+    $('sf-balloon-field').style.display = this.checked ? '' : 'none';
+    recalcAll();
+  });
+  $('sf-paytype').addEventListener('change', function(){
+    $('sf-custom-pi-field').style.display = this.value === 'custom' ? '' : 'none';
+    recalcAll();
+  });
+  $('st-override-on').addEventListener('change', function(){
+    $('st-override-field').style.display = this.checked ? '' : 'none';
+    recalcAll();
+  });
+  $('sf-commission-mode').addEventListener('change', function(){
+    $('sf-commission-pct-field').style.display = this.value === 'pct' ? '' : 'none';
+    $('sf-commission-flat-field').style.display = this.value === 'flat' ? '' : 'none';
+    recalcAll();
+  });
+
+  wireAmortToggle('mo-amort-toggle', 'mo-amort-wrap');
+  wireAmortToggle('sf-amort-toggle', 'sf-amort-wrap');
+  wireAmortToggle('st-amort-toggle', 'st-amort-wrap');
+
+  wireCopyButton('copy-maxoffer-btn', () => window.__mo_summary ? window.__mo_summary() : '');
+  wireCopyButton('copy-sellerfi-btn', () => window.__sf_summary ? window.__sf_summary() : '');
+  wireCopyButton('copy-subto-btn', () => window.__st_summary ? window.__st_summary() : '');
+  wireCopyButton('copy-flip-btn', () => window.__flip_summary ? window.__flip_summary() : '');
+
+  // ---- reset all ----
+  const DEFAULTS = {
+    rent:'2400', vacancy:'5', maintmgmt:'15', taxes:'250', insurance:'120', hoa:'0', otherfees:'0', targetdscr:'1.25',
+    'mo-rate':'8', 'mo-term':'30', 'mo-down':'10', 'mo-assignfee':'0',
+    'sf-price':'250000', 'sf-downpct':'10', 'sf-downamt':'25000', 'sf-extracash':'0', 'sf-rate':'8', 'sf-term':'30',
+    'sf-pi-override-amt':'0', 'sf-balloon-years':'5', 'sf-targetcoc':'16', 'sf-maxpremium':'10',
+    'sf-commission-pct':'3', 'sf-commission-flat':'0', 'sf-assignmentfee':'0',
+    'st-balance':'220000', 'st-rate':'4.5', 'st-term':'27', 'st-marketrate':'7.5', 'st-override-amt':'0',
+    'st-offerprice':'0', 'st-cash':'0', 'st-2ndamt':'0', 'st-2ndrate':'8', 'st-2ndterm':'10',
+    'flip-subject-sqft':'1400', 'flip-arv':'0', 'flip-rehab':'30000', 'flip-rule-pct':'70',
+    'flip-price':'0', 'flip-downpct':'10', 'flip-rate':'11', 'flip-points':'2', 'flip-holdmonths':'5',
+    'flip-holdcosts':'250', 'flip-sellpct':'8'
+  };
+  const DEFAULT_CHECKBOXES = ['sf-balloon-on','st-override-on','st-escrowed-on'];
+
+  $('reset-all-btn').addEventListener('click', function(){
+    if (!confirm('Reset every field on all four tabs back to defaults? This cannot be undone.')) return;
+
+    Object.keys(DEFAULTS).forEach(id=>{ if ($(id)) $(id).value = DEFAULTS[id]; });
+    DEFAULT_CHECKBOXES.forEach(id=>{ if ($(id)) $(id).checked = false; });
+    $('st-2ndtype').value = 'amortizing';
+
+    $('sf-pi-override-field').style.display = 'none';
+    $('sf-balloon-field').style.display = 'none';
+    $('sf-balloon-callout').style.display = 'none';
+    $('st-override-field').style.display = 'none';
+
+    sfLastEdited = 'pct';
+    $('st-2ndamt').readOnly = false;
+    $('st-2nd-mode-label').textContent = '';
+    $('st-offer-warning').style.display = 'none';
+    $('st-2nd-due-callout').style.display = 'none';
+    $('sf-commission-mode').value = 'none';
+    $('sf-commission-pct-field').style.display = 'none';
+    $('sf-commission-flat-field').style.display = 'none';
+    $('sf-netoffer-slip').style.display = 'none';
+    $('sf-paytype').value = 'amortizing';
+    $('sf-custom-pi-field').style.display = 'none';
+    $('sf-io-callout').style.display = 'none';
+    $('mo-endbuyer-row').style.display = 'none';
+    $('mo-fee-row').style.display = 'none';
+    $('mo-fee-warning').style.display = 'none';
+
+    document.querySelectorAll('.pillbtn[data-dscr]').forEach(b=>b.classList.remove('active'));
+    document.querySelector('.pillbtn[data-dscr="1.25"]').classList.add('active');
+    document.querySelectorAll('.pillbtn[data-rule]').forEach(b=>b.classList.remove('active'));
+
+    $('flip-comps-list').innerHTML = DEFAULT_COMPS_HTML;
+
+    document.querySelectorAll('.amort-scroll').forEach(el=>el.style.display='none');
+    document.querySelectorAll('.amort-toggle').forEach(el=>el.classList.remove('open'));
+
+    const d = new Date(); d.setMonth(d.getMonth()+1); d.setDate(1);
+    $('sf-fpd').value = d.toISOString().slice(0,10);
+
+    recalcAll();
+  });
+
+  // default first payment date = 1st of next month
+  (function(){
+    const d = new Date();
+    d.setMonth(d.getMonth()+1);
+    d.setDate(1);
+    $('sf-fpd').value = d.toISOString().slice(0,10);
+  })();
+
+  recalcAll();
+})();
+</script>
+</body>
+</html>
